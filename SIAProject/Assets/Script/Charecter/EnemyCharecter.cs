@@ -4,18 +4,64 @@ using UnityEngine;
 
 public class EnemyCharecter : Charecter
 {
-    [SerializeField]private int damage = 10;
+    public int Damage;
+    protected GameManager gM;
+    [SerializeField] private float knockBack;
+    [SerializeField] private int scoreInFirstRound = 1;
+    [SerializeField] protected ParticleSystem dieParticle;
+  
 
-    private void OnTriggerEnter(Collider other)
+
+    protected virtual void Awake()
     {
-        var player = other.gameObject.GetComponent<ITakeDamage>();
-        player?.TakeDamage(damage);
-        print("atk");
+        gM = GameManager.Instance;
+        gM.OnSlow += SlowEnemyAndExit;
+    }
+
+    public void Init(int hp, float speed,int damage)
+    {
+        base.Init(hp, speed);
+        Damage = damage;
+
+    }
+    public void OnStunt()
+    {
+        Speed = 0;
+  
+    }
+    public void ExitStunt(float speed)
+    {
+        Speed = speed;
+       
+    }
+
+    private void SlowEnemyAndExit(float speed)
+    {
+        Speed = speed;
+        //Slow and Exit Slow Animation
+        //Slow and Exitr Slow Atk
+    }
+
+    protected virtual void OnCollisionEnter(Collision collision)
+    {
+        
+        if (collision.gameObject.tag == "Player")
+        {
+            Rigidbody rb = collision.collider.GetComponent<Rigidbody>();
+            Vector3 direction =collision.transform.position - transform.position;
+            direction.y = 0;
+            rb.AddForce(direction.normalized * knockBack, ForceMode.Impulse);
+
+            var player = collision.gameObject.GetComponent<ITakeDamage>();
+            player?.TakeDamage(Damage);
+        }
+     
     }
 
     public override void IsDie()
     {
+        Instantiate(dieParticle, transform.position, Quaternion.identity);
         Destroy(gameObject);
-        ScoreManager.Instance.AddScore(1);
+        ScoreManager.Instance.AddScore(scoreInFirstRound);
     }
 }
